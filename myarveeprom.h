@@ -12,12 +12,14 @@ class MyEeprom {
       void write_byte(uint8_t b, uint16_t relative_address);
       uint8_t read_byte(uint16_t relative_address);
       uint16_t getCurrentOffset();
+      uint32_t getCurrentFirstAddress();
 
     private:
         uint16_t dataLength;
         uint32_t firstAddress;
         uint32_t maxAddress;
         uint16_t currentOffset;
+        uint8_t servisInfo = 1;
 };
 
 #endif // __MYARVEEPROM__
