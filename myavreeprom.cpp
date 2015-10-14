@@ -1,23 +1,24 @@
 #include "myarveeprom.h"
 
-MyEeprom::MyEeprom (uint32_t first_address, uint32_t max_address, uint16_t data_length, bool reload_pages = false) {
-  if (first_address + data_length + 1 > max_address) {
+MyEeprom::MyEeprom (uint32_t first_address, uint32_t max_address, uint16_t data_length, bool reload_pages) {
+  /*if (first_address + data_length + 1 > max_address) {
       return null;
-  }
+  }*/
   firstAddress = first_address;
   maxAddress = max_address;
   dataLength = data_length;
 
   if (reload_pages == false) { currentOffset = 0; }
   else {
-      uint16_t k = 0; bool found = false;
+      bool found = false;
       currentOffset = 0;
       while (!eeprom_is_ready());
-      while ((first_address + k * (data_length + 1) < max_address) && (!found)) {
-          if (eeprom_read_byte((uint8_t*)(first_address + k * (data_length + 1))) == P_VALID) {
+      while ((first_address + currentOffset * (data_length + 1) < max_address) && (!found)) {
+          if (eeprom_read_byte((uint8_t*)(first_address + currentOffset * (data_length + 1))) == P_VALID) {
               found = true;
+          } else {
+              currentOffset++;
           }
-          currentOffset++;
       }
       if (!found) { currentOffset = 0; }
   }
@@ -51,4 +52,8 @@ void MyEeprom::write_byte(uint8_t b, uint16_t relative_address) {
     eeprom_write_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + 1)), P_VALID);
     eeprom_write_byte((uint8_t*)(firstAddress + pCurrentOffset * (dataLength + 1)), P_INVALID);
     sei();
+}
+
+uint16_t MyEeprom::getCurrentOffset() {
+  return(currentOffset);
 }
