@@ -31,19 +31,12 @@ MyEeprom::MyEeprom(uint32_t first_address) {
 }
 
 uint8_t MyEeprom::readByte(uint16_t relative_address) {
-  if (rotateEeprom == true) {
-    read_byte(relative_address);
-  } else { simple_read_byte(relative_address); }
-}
-
-uint8_t MyEeprom::read_byte(uint16_t relative_address) {
-    while (!eeprom_is_ready());
-    return(eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address)));
-}
-
-uint8_t MyEeprom::simple_read_byte(uint16_t relative_address) {
   while (!eeprom_is_ready());
-  return(eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address)));
+  if (rotateEeprom == true) {
+    return(eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address)));
+  } else { 
+    return(eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address)));
+  }
 }
 
 void MyEeprom::writeByte(uint8_t b, uint16_t relative_address) {
@@ -105,10 +98,10 @@ void MyEeprom::simple_write_ulong(uint32_t l, uint16_t relative_address) {
     if (eeprom_read_byte((uint8_t*)firstAddress) == P_INVALID) {
       eeprom_write_byte((uint8_t*)firstAddress, P_VALID);
     }
-    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 0, *((byte*)&l + 0));
-    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 1, *((byte*)&l + 1));
-    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 2, *((byte*)&l + 2));
-    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 3, *((byte*)&l + 3));
+    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 0, *((uint8_t*)&l + 0));
+    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 1, *((uint8_t*)&l + 1));
+    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 2, *((uint8_t*)&l + 2));
+    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 3, *((uint8_t*)&l + 3));
     sei();
 }
 
@@ -116,7 +109,7 @@ void MyEeprom::write_ulong(uint32_t l, uint16_t relative_address) {
   cli();
   while (!eeprom_is_ready());
     uint16_t pCurrentOffset = currentOffset;
-    if (firstAddress + (currentOffset + 1) * (dataLength + servisInfo) > maxAddress) {
+    if (firstAddress + (currentOffset + 2) * (dataLength + servisInfo) > maxAddress) {
         currentOffset = 0;
     } else { currentOffset++; }
     uint8_t tb = 0;
@@ -124,11 +117,11 @@ void MyEeprom::write_ulong(uint32_t l, uint16_t relative_address) {
     int32_t currentOAddress = firstAddress + pCurrentOffset * (dataLength + servisInfo) + servisInfo;   
     for (uint16_t i = 0; i < dataLength; i++) {
         if (i == relative_address) {
-            eeprom_write_byte((uint8_t*)(currentNAddress + i + 0), *((byte*)&l + 0));
-            eeprom_write_byte((uint8_t*)(currentNAddress + i + 1), *((byte*)&l + 1));
-            eeprom_write_byte((uint8_t*)(currentNAddress + i + 2), *((byte*)&l + 2));
-            eeprom_write_byte((uint8_t*)(currentNAddress + i + 3), *((byte*)&l + 3));
-            i+=4;
+            eeprom_write_byte((uint8_t*)(currentNAddress + i + 0), *((uint8_t*)&l + 0));
+            eeprom_write_byte((uint8_t*)(currentNAddress + i + 1), *((uint8_t*)&l + 1));
+            eeprom_write_byte((uint8_t*)(currentNAddress + i + 2), *((uint8_t*)&l + 2));
+            eeprom_write_byte((uint8_t*)(currentNAddress + i + 3), *((uint8_t*)&l + 3));
+            i+=3;
         } else {
           tb = eeprom_read_byte((uint8_t*)(currentOAddress + i));
           eeprom_write_byte((uint8_t*)(currentNAddress + i), tb);
@@ -140,30 +133,18 @@ void MyEeprom::write_ulong(uint32_t l, uint16_t relative_address) {
 }
 
 uint32_t MyEeprom::readULong (uint16_t relative_address) {
-  if (rotateEeprom == true) {
-    return read_ulong (relative_address);
-  } else {
-    return simple_read_ulong (relative_address);
-  }
-}
-
-uint32_t MyEeprom::simple_read_ulong (uint16_t relative_address){
   uint32_t l = 0;
+  uint32_t cAddress = 0;
+  if (rotateEeprom == true) {
+    cAddress = firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address;
+  } else {
+    cAddress = firstAddress + servisInfo + relative_address;
+  }
   while (!eeprom_is_ready());
-  *((byte*)&l + 0) = eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address + 0));
-  *((byte*)&l + 1) = eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address + 1));
-  *((byte*)&l + 2) = eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address + 2));
-  *((byte*)&l + 3) = eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address + 3));
-  return l;
-}
-
-uint32_t MyEeprom::read_ulong (uint16_t relative_address){
-  uint32_t l = 0; 
-  while (!eeprom_is_ready());
-  *((byte*)&l + 0) = eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address + 0));
-  *((byte*)&l + 1) = eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address + 1));
-  *((byte*)&l + 2) = eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address + 2));
-  *((byte*)&l + 3) = eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address + 3));
+  *((uint8_t*)&l + 0) = eeprom_read_byte((uint8_t*)(cAddress + 0));
+  *((uint8_t*)&l + 1) = eeprom_read_byte((uint8_t*)(cAddress + 1));
+  *((uint8_t*)&l + 2) = eeprom_read_byte((uint8_t*)(cAddress + 2));
+  *((uint8_t*)&l + 3) = eeprom_read_byte((uint8_t*)(cAddress + 3));
   return l;
 }
 
@@ -176,26 +157,15 @@ void MyEeprom::writeUInt (uint16_t l, uint16_t relative_address) {
 }
 
 uint16_t MyEeprom::readUInt (uint16_t relative_address) {
-  if (rotateEeprom == true) {
-    return read_uint (relative_address);
-  } else {
-    return simple_read_uint (relative_address);
-  }
-}
-
-uint16_t MyEeprom::simple_read_uint (uint16_t relative_address){
   uint16_t l = 0;
-  while (!eeprom_is_ready());
-  *((byte*)&l + 0) = eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address + 0));
-  *((byte*)&l + 1) = eeprom_read_byte((uint8_t*)(firstAddress + servisInfo + relative_address + 1));
-  return l;
-}
-
-uint16_t MyEeprom::read_ulong (uint16_t relative_address){
-  uint16_t l = 0; 
-  while (!eeprom_is_ready());
-  *((byte*)&l + 0) = eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address + 0));
-  *((byte*)&l + 1) = eeprom_read_byte((uint8_t*)(firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address + 1));
+  uint32_t cAddress = 0;
+  if (rotateEeprom == true) {
+    cAddress = firstAddress + currentOffset * (dataLength + servisInfo) + servisInfo + relative_address;
+  } else {
+    cAddress = firstAddress + servisInfo + relative_address;
+  }
+  *((uint8_t*)&l + 0) = eeprom_read_byte((uint8_t*)(cAddress + 0));
+  *((uint8_t*)&l + 1) = eeprom_read_byte((uint8_t*)(cAddress + 1));
   return l;
 }
 
@@ -205,8 +175,8 @@ void MyEeprom::simple_write_uint(uint16_t l, uint16_t relative_address) {
     if (eeprom_read_byte((uint8_t*)firstAddress) == P_INVALID) {
       eeprom_write_byte((uint8_t*)firstAddress, P_VALID);
     }
-    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 0, *((byte*)&l + 0));
-    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 1, *((byte*)&l + 1));
+    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 0, *((uint8_t*)&l + 0));
+    eeprom_write_byte((uint8_t*)firstAddress + servisInfo + relative_address + 1, *((uint8_t*)&l + 1));
     sei();
 }
 
@@ -222,9 +192,9 @@ void MyEeprom::write_uint(uint16_t l, uint16_t relative_address) {
     int32_t currentOAddress = firstAddress + pCurrentOffset * (dataLength + servisInfo) + servisInfo;   
     for (uint16_t i = 0; i < dataLength; i++) {
         if (i == relative_address) {
-            eeprom_write_byte((uint8_t*)(currentNAddress + i + 0), *((byte*)&l + 0));
-            eeprom_write_byte((uint8_t*)(currentNAddress + i + 1), *((byte*)&l + 1));
-            i+=2;
+            eeprom_write_byte((uint8_t*)(currentNAddress + i + 0), *((uint8_t*)&l + 0));
+            eeprom_write_byte((uint8_t*)(currentNAddress + i + 1), *((uint8_t*)&l + 1));
+            i+=1;
         } else {
           tb = eeprom_read_byte((uint8_t*)(currentOAddress + i));
           eeprom_write_byte((uint8_t*)(currentNAddress + i), tb);

@@ -46,16 +46,10 @@ class MyEeprom {
         bool rotateEeprom;
         void write_byte(uint8_t b, uint16_t relative_address);
         void simple_write_byte(uint8_t b, uint16_t relative_address);
-        void write_ulong(uint32_t l, uint16_t relative_address)
+        void write_ulong(uint32_t l, uint16_t relative_address);
         void simple_write_ulong(uint32_t l, uint16_t relative_address);
-        void write_uint(uint32_t l, uint16_t relative_address);
-        void simple_write_uint(uint32_t l, uint16_t relative_address);
-        uint8_t read_byte(uint16_t relative_address);
-        uint8_t simple_read_byte(uint16_t relative_address);
-        uint16_t read_uint (uint16_t relative_address);
-        uint16_t simple_read_uint (uint16_t relative_address);
-        uint32_t read_ulong (uint16_t relative_address);
-        uint32_t simple_read_ulong (uint16_t relative_address);
+        void write_uint(uint16_t l, uint16_t relative_address);
+        void simple_write_uint(uint16_t l, uint16_t relative_address);
 };
 
 #endif // __MYARVEEPROM__
